@@ -1,0 +1,26 @@
+module.exports = {
+  development:{
+    DBUSER:'root',
+    DBHOST:'localhost',
+    DBPASS:'',
+    DBDB:'cron_test',
+    WAMPURL:'wss://ubuntuserver.outlawdesigns.io:9700/ws',
+    WAMPREALM:'realm1'
+  },
+  testing:{
+    DBUSER:'root',
+    DBHOST:'localhost',
+    DBPASS:'',
+    DBDB:'cron_test',
+    WAMPURL:'',
+    WAMPREALM:'realm1'
+  },
+  production:{
+    DBUSER:'root',
+    DBHOST:'localhost',
+    DBPASS:'',
+    DBDB:'cron',
+    WAMPURL:'',
+    WAMPREALM:'realm1'
+  }
+};
