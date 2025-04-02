@@ -1,26 +1,26 @@
 module.exports = {
   development:{
-    DBUSER:'root',
-    DBHOST:'localhost',
-    DBPASS:'',
-    DBDB:'cron_test',
-    WAMPURL:'wss://ubuntuserver.outlawdesigns.io:9700/ws',
-    WAMPREALM:'realm1'
+    DBUSER: process.env.MYSQL_USER || 'root',
+    DBHOST: process.env.MYSQL_HOST || 'localhost',
+    DBPASS: process.env.MYSQL_PASS || '',
+    DBDB: 'cron_test',
+    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
+    WAMPREALM: process.env.WAMPREALM || 'realm1'
   },
   testing:{
-    DBUSER:'root',
-    DBHOST:'localhost',
-    DBPASS:'',
+    DBUSER: process.env.MYSQL_USER || 'root',
+    DBHOST: process.env.MYSQL_HOST || 'localhost',
+    DBPASS: process.env.MYSQL_PASS || '',
     DBDB:'cron_test',
-    WAMPURL:'',
-    WAMPREALM:'realm1'
+    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
+    WAMPREALM: process.env.WAMPREALM || 'realm1'
   },
   production:{
-    DBUSER:'root',
-    DBHOST:'localhost',
-    DBPASS:'',
+    DBUSER: process.env.MYSQL_USER || 'root',
+    DBHOST: process.env.MYSQL_HOST || 'localhost',
+    DBPASS: process.env.MYSQL_PASS || '',
     DBDB:'cron',
-    WAMPURL:'',
-    WAMPREALM:'realm1'
+    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
+    WAMPREALM: process.env.WAMPREALM || 'realm1'
   }
 };

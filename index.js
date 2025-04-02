@@ -28,17 +28,39 @@ const wampConn = new autobahn.Connection({
   realm:global.config[process.env.NODE_ENV].WAMPREALM
 });
 
+//New Execution
 mysqlEvents.addTrigger({
   name:'EXECUTION_TRIGGER',
   expression:`${global.config[process.env.NODE_ENV].DBDB}.execution`,
   statement: MySQLEvents.STATEMENTS.INSERT,
-  onEvent: (event) => _mysqlEventHandler(event,wampConn)
+  onEvent: (event) => _executionInsertHandler(event,wampConn)
+});
+//New Job
+mysqlEvents.addTrigger({
+  name:'NEWJOB_TRIGGER',
+  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  statement: MySQLEvents.STATEMENTS.INSERT,
+  onEvent: (event)=> _jobInsertHandler(event,wampConn)
+});
+//Job Updated
+mysqlEvents.addTrigger({
+  name:'UPDATEJOB_TRIGGER',
+  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  statement:MySQLEvents.STATEMENTS.UPDATE,
+  onEvent: (event)=> _jobUpdateHandler(event,wampConn)
+});
+//Job Deleted
+mysqlEvents.addTrigger({
+  name:'DELETEJOB_TRIGGER',
+  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  statement:MySQLEvents.STATEMENTS.DELETE,
+  onEvent: (event)=> _jobDeleteHandler(event,wampConn)
 });
 mysqlEvents.on(MySQLEvents.EVENTS.CONNECTION_ERROR, console.error);
 mysqlEvents.on(MySQLEvents.EVENTS.ZONGJI_ERROR, console.error);
 
 
-function _mysqlEventHandler(event, wampConn){
+function _executionInsertHandler(event, wampConn){
   let newRow = event.affectedRows[0].after;
   let thisJob = jobs.filter(e => e.id == newRow.jobId);
   if(wampConn.isOpen){
@@ -50,6 +72,28 @@ function _mysqlEventHandler(event, wampConn){
     }
   }else{
     console.error('WAMP connection is not open')
+  }
+}
+function _jobInsertHandler(event,wampConn){
+  let newRow = event.affectedRows[0].after;
+  if(wampConn.isOpen){
+    console.log('published: io.outlawdesigns.cron.jobCreated');
+    wampConn.session.publish('io.outlawdesigns.cron.jobCreated', [newRow]);
+  }
+}
+function _jobUpdateHandler(event,wampConn){
+  let before = event.affectedRows[0].before;
+  let after = event.affectedRows[0].after;
+  if(wampConn.isOpen){
+    console.log('published: io.outlawdesigns.cron.jobChanged');
+    wampConn.session.publish('io.outlawdesigns.cron.jobChanged', [before,after]);
+  }
+}
+function _jobDeleteHandler(event,wampConn){
+  let before = event.affectedRows[0].before;
+  if(wampConn.isOpen){
+    console.log('published: io.outlawdesigns.cron.jobDeleted');
+    wampConn.session.publish('io.outlawdesigns.cron.jobDeleted',[before]);
   }
 }
 
