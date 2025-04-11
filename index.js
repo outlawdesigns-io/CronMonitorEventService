@@ -122,8 +122,8 @@ async function _checkForOverdue(jobsArr, session){
       const timeWindowBefore = estCompletion - POLL_LENGTH;
       const timeWindowAfter = estCompletion;
       if(now >= timeWindowBefore && now <= timeWindowAfter){
-        // console.log('execution missed!');
         session.publish('io.outlawdesigns.cron.executionMissed',[jobsArr[i]]);
+        console.log('published: io.outlawdesigns.cron.executionMissed');
       }
     }
   }
