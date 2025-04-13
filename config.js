@@ -10,5 +10,6 @@ process.env.WAMPREALM = process.env.WAMPREALM || 'realm1'
 
 
 module.exports = {
-  POLL_LENGTH:3000
+  POLL_LENGTH:3000,
+  MYSQL_APP_ID: 8801 //random number between 1 and 4294967295 do differential this app from any other listeners
 };

@@ -6,6 +6,7 @@ const ModelFactory = require('@outlawdesigns/cronmonitorsdk');
 const config = require('./config');
 
 const POLL_LENGTH = config.POLL_LENGTH;
+const MYSQL_APP_ID = config.MYSQL_APP_ID;
 // const POLL_BUFFER = 500;
 
 const mysqlConn = mysql.createPool({
@@ -15,6 +16,7 @@ const mysqlConn = mysql.createPool({
 });
 
 const mysqlEvents = new MySQLEvents(mysqlConn,{
+  serverId:MYSQL_APP_ID,
   startAtEnd:true,
   excludeSchemas:{
     mysql:true
