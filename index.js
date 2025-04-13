@@ -1,19 +1,17 @@
 const mysql = require('mysql');
 const autobahn = require('autobahn');
 const MySQLEvents = require('@rodrigogs/mysql-events');
-const ModelFactory = require('outlawdesigns.io.cronmonitorsdk');
+const ModelFactory = require('@outlawdesigns/cronmonitorsdk');
 
-global.config = require('./config');
+const config = require('./config');
 
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.MYSQL_CRON_DB = global.config[process.env.NODE_ENV].DBDB;
-const POLL_LENGTH = 3000;
+const POLL_LENGTH = config.POLL_LENGTH;
 // const POLL_BUFFER = 500;
 
 const mysqlConn = mysql.createPool({
-  host: global.config[process.env.NODE_ENV].DBHOST,
-  user: global.config[process.env.NODE_ENV].DBUSER,
-  password: global.config[process.env.NODE_ENV].DBPASS
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASS
 });
 
 const mysqlEvents = new MySQLEvents(mysqlConn,{
@@ -24,35 +22,35 @@ const mysqlEvents = new MySQLEvents(mysqlConn,{
 });
 
 const wampConn = new autobahn.Connection({
-  url:global.config[process.env.NODE_ENV].WAMPURL,
-  realm:global.config[process.env.NODE_ENV].WAMPREALM
+  url:process.env.WAMPURL,
+  realm:process.env.WAMPREALM
 });
 
 //New Execution
 mysqlEvents.addTrigger({
   name:'EXECUTION_TRIGGER',
-  expression:`${global.config[process.env.NODE_ENV].DBDB}.execution`,
+  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('execution').table}`,
   statement: MySQLEvents.STATEMENTS.INSERT,
   onEvent: (event) => _executionInsertHandler(event,wampConn)
 });
 //New Job
 mysqlEvents.addTrigger({
   name:'NEWJOB_TRIGGER',
-  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
   statement: MySQLEvents.STATEMENTS.INSERT,
   onEvent: (event)=> _jobInsertHandler(event,wampConn)
 });
 //Job Updated
 mysqlEvents.addTrigger({
   name:'UPDATEJOB_TRIGGER',
-  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
   statement:MySQLEvents.STATEMENTS.UPDATE,
   onEvent: (event)=> _jobUpdateHandler(event,wampConn)
 });
 //Job Deleted
 mysqlEvents.addTrigger({
   name:'DELETEJOB_TRIGGER',
-  expression:`${global.config[process.env.NODE_ENV].DBDB}.job`,
+  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
   statement:MySQLEvents.STATEMENTS.DELETE,
   onEvent: (event)=> _jobDeleteHandler(event,wampConn)
 });

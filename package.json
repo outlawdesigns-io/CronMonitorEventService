@@ -1,5 +1,5 @@
 {
-  "name": "cronevents",
+  "name": "@outlawdesigns/cronmonitor-event-service",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,8 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@outlawdesigns/cronmonitorsdk": "^1.0.3",
     "@rodrigogs/mysql-events": "^0.6.0",
-    "autobahn": "^22.11.1",
-    "outlawdesigns.io.cronmonitorsdk": "^1.0.4"
+    "autobahn": "^22.11.1"
   }
 }

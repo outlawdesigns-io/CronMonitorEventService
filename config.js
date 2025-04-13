@@ -1,26 +1,14 @@
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+//configure SDK db connection
+process.env.MYSQL_HOST = process.env.MYSQL_HOST || 'localhost';
+process.env.MYSQL_USER = process.env.MYSQL_USER || 'root';
+process.env.MYSQL_PASS = process.env.MYSQL_PASS || 'example';
+process.env.MYSQL_CRON_DB = process.env.MYSQL_CRON_DB || 'cron';
+//configure WAMP connection
+process.env.WAMPURL = process.env.WAMPURL || 'wss://localhost:9700/ws'
+process.env.WAMPREALM = process.env.WAMPREALM || 'realm1'
+
+
 module.exports = {
-  development:{
-    DBUSER: process.env.MYSQL_USER || 'root',
-    DBHOST: process.env.MYSQL_HOST || 'localhost',
-    DBPASS: process.env.MYSQL_PASS || '',
-    DBDB: 'cron_test',
-    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
-    WAMPREALM: process.env.WAMPREALM || 'realm1'
-  },
-  testing:{
-    DBUSER: process.env.MYSQL_USER || 'root',
-    DBHOST: process.env.MYSQL_HOST || 'localhost',
-    DBPASS: process.env.MYSQL_PASS || '',
-    DBDB:'cron_test',
-    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
-    WAMPREALM: process.env.WAMPREALM || 'realm1'
-  },
-  production:{
-    DBUSER: process.env.MYSQL_USER || 'root',
-    DBHOST: process.env.MYSQL_HOST || 'localhost',
-    DBPASS: process.env.MYSQL_PASS || '',
-    DBDB:'cron',
-    WAMPURL: process.env.WAMPURL || 'wss://ubuntuserver.outlawdesigns.io:9700/ws',
-    WAMPREALM: process.env.WAMPREALM || 'realm1'
-  }
+  POLL_LENGTH:3000
 };
