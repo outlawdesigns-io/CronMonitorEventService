@@ -3,6 +3,13 @@ version: '3.1'
 services:
   backend:
     image: cronmonitorevents-wamp
+    environment:
+      MYSQL_HOST: $DOCKER_MYSQL_HOST
+      MYSQL_USER: $DOCKER_MYSQL_USER
+      MYSQL_PASS: $DOCKER_MYSQL_PASS
+      MYSQL_CRON_DB: $DOCKER_MYSQL_CRON_DB
+      WAMPURL: $DOCKER_WAMP_URL
+      WAMPREALM: $DOCKER_WAMP_REALM
     build:
       context: $DOCKER_BUILD_DIR/CronMonitorEventService/
       dockerfile: $DOCKER_BUILD_DIR/CronMonitorEventService/Dockerfile
