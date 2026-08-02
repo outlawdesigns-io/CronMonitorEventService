@@ -10,8 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@outlawdesigns/authenticationclient": "^2.1.2",
     "@outlawdesigns/cronmonitorsdk": "^1.0.3",
     "@rodrigogs/mysql-events": "^0.6.0",
     "autobahn": "^22.11.1"
-  }
+  },
+  "type":"module"
 }

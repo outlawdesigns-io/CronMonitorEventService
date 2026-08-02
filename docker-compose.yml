@@ -1,15 +1,20 @@
-version: '3.1'
-
 services:
   backend:
-    image: cronmonitorevents-wamp
+    image: cronevents-wamp
     environment:
-      MYSQL_HOST: $DOCKER_MYSQL_HOST
-      MYSQL_USER: $DOCKER_MYSQL_USER
-      MYSQL_PASS: $DOCKER_MYSQL_PASS
-      MYSQL_CRON_DB: $DOCKER_MYSQL_CRON_DB
-      WAMPURL: $DOCKER_WAMP_URL
-      WAMPREALM: $DOCKER_WAMP_REALM
+      NODE_ENV: development
+      TZ: America/Chicago
+      MYSQL_HOST: localhost
+      MYSQL_USER: root
+      MYSQL_PASS: example
+      MYSQL_CRON_DB: cron_test
+      WAMPURL: ws://localhost:8081/ws
+      WAMPREALM: oauth2
+      AUTH_DISCOVERY_URI: https://auth.outlawdesigns.io/.well-known/openid-configuration
+      AUTH_CLIENT_ID: cronsuite-events
+      AUTH_CLIENT_SECRET: 12345
+      AUTH_CLIENT_AUDIENCE: wamp-client
+      AUTH_CLIENT_SCOPE: "openid, profile, email, roles"
     build:
-      context: $DOCKER_BUILD_DIR/CronMonitorEventService/
-      dockerfile: $DOCKER_BUILD_DIR/CronMonitorEventService/Dockerfile
+      context: ./
+      dockerfile: ./Dockerfile
