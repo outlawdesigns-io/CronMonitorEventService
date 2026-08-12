@@ -12,8 +12,9 @@
   "dependencies": {
     "@outlawdesigns/authenticationclient": "^2.1.2",
     "@outlawdesigns/cronmonitorsdk": "^1.0.3",
-    "@rodrigogs/mysql-events": "^0.6.0",
-    "autobahn": "^22.11.1"
+    "@vlasky/zongji": "^0.9.0",
+    "autobahn": "^22.11.1",
+    "mysql2": "^3.23.2"
   },
-  "type":"module"
+  "type": "module"
 }

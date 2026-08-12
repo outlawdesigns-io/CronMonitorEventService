@@ -1,10 +1,16 @@
-import mysql from 'mysql';
+import mysql from 'mysql2';
 import autobahn from 'autobahn';
-import MySQLEvents from '@rodrigogs/mysql-events';
+import ZongJi from '@vlasky/zongji';
 import ModelFactory from '@outlawdesigns/cronmonitorsdk';
 import authClient from '@outlawdesigns/authenticationclient';
 
 import config from './config.js'
+
+const BINLOG_EVENTS = {
+  INSERT:'WriteRows',
+  UPDATE:'UpdateRows',
+  DELETE:'DeleteRows'
+};
 
 const POLL_LENGTH = process.env.POLL_LENGTH;
 const MYSQL_APP_ID = config.MYSQL_APP_ID;
@@ -21,18 +27,18 @@ const mysqlConn = mysql.createPool({
   password: process.env.MYSQL_PASS
 });
 
-const mysqlEvents = new MySQLEvents(mysqlConn,{
-  serverId:MYSQL_APP_ID,
-  startAtEnd:true,
-  excludeSchemas:{
-    mysql:true
-  }
-});
+const zongji = new ZongJi(mysqlConn);
 
-// const wampConn = new autobahn.Connection({
-//   url:process.env.WAMPURL,
-//   realm:process.env.WAMPREALM
-// });
+const zongOptions = {
+    startAtEnd: true,
+    excludeSchema: {
+        mysql: true
+    },
+    includeEvents: ['tablemap', 'writerows', 'updaterows', 'deleterows'],
+    includeSchema:{
+      [process.env.MYSQL_CRON_DB]:true
+    }
+};
 
 const wampConn = new autobahn.Connection({
   url: process.env.WAMPURL,
@@ -44,58 +50,57 @@ const wampConn = new autobahn.Connection({
   }
 });
 
-//New Execution
-mysqlEvents.addTrigger({
-  name:'EXECUTION_TRIGGER',
-  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('execution').table}`,
-  statement: MySQLEvents.STATEMENTS.INSERT,
-  onEvent: (event) => _executionInsertHandler(event,wampConn)
+zongji.on('binlog', event => {
+  const table = event.tableMap[event.tableId];
+  if(!table){
+    return;
+  }
+  const expression = `${table.parentSchema}.${table.tableName}`;
+  const eventType = event.getTypeName();
+  let selectedTriggers = triggers.filter(trigger => trigger.expression == expression && trigger.event === eventType);
+  selectedTriggers.forEach(trigger => trigger.handler(event));
 });
-//New Job
-mysqlEvents.addTrigger({
-  name:'NEWJOB_TRIGGER',
-  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
-  statement: MySQLEvents.STATEMENTS.INSERT,
-  onEvent: (event)=> _genericInsertHandler(event,wampConn,'jobCreated')
-});
-//Job Updated
-mysqlEvents.addTrigger({
-  name:'UPDATEJOB_TRIGGER',
-  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
-  statement:MySQLEvents.STATEMENTS.UPDATE,
-  onEvent: (event)=> _genericUpdateHandler(event,wampConn,'jobChanged')
-});
-//Job Deleted
-mysqlEvents.addTrigger({
-  name:'DELETEJOB_TRIGGER',
-  expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
-  statement:MySQLEvents.STATEMENTS.DELETE,
-  onEvent: (event)=> _genericDeleteHandler(event,wampConn,'jobDeleted')
-});
-mysqlEvents.addTrigger({
-  name: 'NEWSUBSCRIPTION_TRIGGER',
-  expression: `${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
-  statement:MySQLEvents.STATEMENTS.INSERT,
-  onEvent: (event) => _genericInsertHandler(event, wampConn,'subscriptionCreated')
-});
-mysqlEvents.addTrigger({
-  name: 'UPDATESUBSCRIPTION_TRIGGER',
-  expression: `${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
-  statement:MySQLEvents.STATEMENTS.UPDATE,
-  onEvent: (event) => _genericUpdateHandler(event, wampConn,'subscriptionChanged')
-});
-mysqlEvents.addTrigger({
-  name: 'DELETESUBSCRIPTION_TRIGGER',
-  expression: `${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
-  statement:MySQLEvents.STATEMENTS.DELETE,
-  onEvent: (event) => _genericDeleteHandler(event, wampConn,'subscriptionUpdated')
-});
-mysqlEvents.on(MySQLEvents.EVENTS.CONNECTION_ERROR, console.error);
-mysqlEvents.on(MySQLEvents.EVENTS.ZONGJI_ERROR, console.error);
 
+const triggers = [
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('execution').table}`,
+    event: BINLOG_EVENTS.INSERT,
+    handler: event => _executionInsertHandler(event,wampConn)
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
+    event: BINLOG_EVENTS.INSERT,
+    handler: event => _genericInsertHandler(event,wampConn,'jobCreated')
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
+    event: BINLOG_EVENTS.UPDATE,
+    handler: event => _genericUpdateHandler(event,wampConn,'jobChanged')
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('job').table}`,
+    event: BINLOG_EVENTS.DELETE,
+    handler: event => _genericDeleteHandler(event,wampConn,'jobDeleted')
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
+    event: BINLOG_EVENTS.INSERT,
+    handler: event => _genericInsertHandler(event,wampConn,'subscriptionCreated')
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
+    event: BINLOG_EVENTS.UPDATE,
+    handler: event => _genericUpdateHandler(event,wampConn,'subscriptionChanged')
+  },
+  {
+    expression:`${process.env.MYSQL_CRON_DB}.${ModelFactory.get('subscription').table}`,
+    event: BINLOG_EVENTS.DELETE,
+    handler: event => _genericDeleteHandler(event,wampConn,'subscriptionDeleted')
+  },
+];
 
 function _executionInsertHandler(event, wampConn){
-  let newRow = event.affectedRows[0].after;
+  let newRow = event.rows[0].after;
   let thisJob = jobs.filter(e => e.id == newRow.jobId);
   if(wampConn.isOpen){
     if(thisJob.length){
@@ -112,7 +117,7 @@ function _executionInsertHandler(event, wampConn){
 }
 
 function _genericInsertHandler(event, wampConn, eventName){
-  let newRow = event.affectedRows[0].after;
+  let newRow = event.rows[0].after;
   if(wampConn.isOpen){
     let publishStr = `io.outlawdesigns.cron.${eventName}`;
     console.log(`published: ${publishStr}`);
@@ -120,8 +125,8 @@ function _genericInsertHandler(event, wampConn, eventName){
   }
 }
 function _genericUpdateHandler(event, wampConn, eventName){
-  let before = event.affectedRows[0].before;
-  let after = event.affectedRows[0].after;
+  let before = event.rows[0].before;
+  let after = event.rows[0].after;
   if(wampConn.isOpen){
     let publishStr = `io.outlawdesigns.cron.${eventName}`;
     console.log(`published: ${publishStr}`);
@@ -129,7 +134,7 @@ function _genericUpdateHandler(event, wampConn, eventName){
   }
 }
 function _genericDeleteHandler(event, wampConn, eventName){
-  let before = event.affectedRows[0].before;
+  let before = event.rows[0].before;
   if(wampConn.isOpen){
     let publishStr = `io.outlawdesigns.cron.${eventName}`;
     console.log(`published: ${publishStr}`);
@@ -176,7 +181,8 @@ wampConn.onopen = async (session)=>{
   console.log('Connected to WAMP router...');
   jobs = await _getJobList();
   console.log(`Retrieved ${jobs.length} jobs...`);
-  await mysqlEvents.start();
+  //await mysqlEvents.start();
+  zongji.start(zongOptions);
   console.log('Monitoring DB...');
   setInterval( async()=>{
     // console.log('Updating Job list...');
