@@ -31,6 +31,7 @@ const zongji = new ZongJi(mysqlConn);
 
 const zongOptions = {
     startAtEnd: true,
+    serverId:MYSQL_APP_ID,
     excludeSchema: {
         mysql: true
     },
