@@ -101,7 +101,7 @@ const triggers = [
 ];
 
 function _executionInsertHandler(event, wampConn){
-  let newRow = event.rows[0].after;
+  let newRow = event.rows[0];
   let thisJob = jobs.filter(e => e.id == newRow.jobId);
   if(wampConn.isOpen){
     if(thisJob.length){
